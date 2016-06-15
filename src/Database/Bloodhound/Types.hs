@@ -1374,7 +1374,8 @@ data ZeroTermsQuery = ZeroTermsNone
                     | ZeroTermsAll deriving (Eq, Read, Show, Generic, Typeable)
 
 data RangeExecution = RangeExecutionIndex
-                    | RangeExecutionFielddata deriving (Eq, Read, Show, Generic, Typeable)
+                    | RangeExecutionFielddata 
+                    | RangeExecutionNone deriving (Eq, Read, Show, Generic, Typeable)
 
 newtype Regexp = Regexp Text deriving (Eq, Read, Show, Generic, Typeable, FromJSON)
 
@@ -1989,9 +1990,15 @@ instance ToJSON Filter where
 
   toJSON (RangeFilter (FieldName fieldName) rangeValue rangeExecution cache) =
     object ["range" .=
-            object [ fieldName .= object (rangeValueToPair rangeValue)
-                   , "execution" .= rangeExecution
-                   , "_cache" .= cache]]
+            object (
+              (if rangeExecution == RangeExecutionNone
+                  then id
+                  else (("execution" .= rangeExecution):)
+              )
+              [ fieldName .= object (rangeValueToPair rangeValue)
+              , "_cache" .= cache
+              ] )
+           ]
 
   toJSON (RegexpFilter (FieldName fieldName)
           (Regexp regexText) flags (CacheName cacheName) cache (CacheKey cacheKey)) =
@@ -3485,13 +3492,14 @@ instance FromJSON LatLon where
 instance ToJSON RangeExecution where
   toJSON RangeExecutionIndex     = "index"
   toJSON RangeExecutionFielddata = "fielddata"
+  toJSON RangeExecutionNone      = "none (this should not ever be serialized)"
 
 
 instance FromJSON RangeExecution where
   parseJSON = withText "RangeExecution" parse
     where parse "index"     = pure RangeExecutionIndex
           parse "fielddata" = pure RangeExecutionFielddata
-          parse t           = error ("Unrecognized RangeExecution " <> show t)
+          parse t           = fail ("Unrecognized RangeExecution " <> show t)
 
 instance ToJSON RegexpFlags where
   toJSON AllRegexpFlags              = String "ALL"
