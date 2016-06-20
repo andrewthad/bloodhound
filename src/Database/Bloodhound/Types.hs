@@ -3560,7 +3560,7 @@ instance FromJSON BoolMatch where
 
 instance (FromJSON a) => FromJSON (SearchResult a) where
   parseJSON (Object v) = SearchResult <$>
-                         v .:  "took"         <*>
+                         fmap (fromMaybe 10) (v .:? "took")         <*>
                          v .:  "timed_out"    <*>
                          v .:  "_shards"      <*>
                          v .:  "hits"         <*>
