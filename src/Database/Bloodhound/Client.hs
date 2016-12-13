@@ -100,6 +100,7 @@ import           Control.Monad
 import           Control.Monad.Catch
 import           Control.Monad.IO.Class
 import           Data.Aeson
+import qualified Data.Aeson.Encoding          as AE
 import           Data.ByteString.Lazy.Builder
 import qualified Data.ByteString.Lazy.Char8   as L
 import           Data.Foldable                (toList)
@@ -892,6 +893,13 @@ encodeBulkOperation (BulkUpdate (IndexName indexName)
     where metadata = mkBulkStreamValue "update" indexName mappingName docId
           doc = object ["doc" .= value]
           blob = encode metadata `mappend` "\n" `mappend` encode doc
+
+encodeBulkOperation (BulkCreateEncoding (IndexName indexName)
+                (MappingName mappingName)
+                (DocId docId) encoding) = toLazyByteString blob
+    where metadata = toEncoding (mkBulkStreamValue "create" indexName mappingName docId)
+          blob = fromEncoding metadata <> "\n" <> fromEncoding encoding
+
 
 -- | 'getDocument' is a straight-forward way to fetch a single document from
 --   Elasticsearch using a 'Server', 'IndexName', 'MappingName', and a 'DocId'.
