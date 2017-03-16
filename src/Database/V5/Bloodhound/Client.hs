@@ -872,10 +872,10 @@ encodeBulkOperation (BulkCreate (IndexName indexName)
     where metadata = mkBulkStreamValue "create" indexName mappingName docId
           blob = encode metadata `mappend` "\n" `mappend` encode value
 
-encodeBulkOperation (BulkCreateAuto (IndexName indexName)
+encodeBulkOperation (BulkIndexAuto (IndexName indexName)
                 (MappingName mappingName)
                 value) = blob
-    where metadata = mkBulkStreamValueAuto "create" indexName mappingName
+    where metadata = mkBulkStreamValueAuto "index" indexName mappingName
           blob = encode metadata `mappend` "\n" `mappend` encode value
 
 encodeBulkOperation (BulkDelete (IndexName indexName)
