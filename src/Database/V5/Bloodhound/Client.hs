@@ -846,6 +846,13 @@ mkBulkStreamValue operation indexName mappingName docId =
                  , "_type"  .= mappingName
                  , "_id"    .= docId]]
 
+mkBulkStreamValueAuto :: Text -> Text -> Text -> Value
+mkBulkStreamValueAuto operation indexName mappingName =
+  object [operation .=
+          object [ "_index" .= indexName
+                 , "_type"  .= mappingName]]
+
+
 -- | 'encodeBulkOperation' is a convenience function for dumping a single 'BulkOperation'
 --   into an 'L.ByteString'
 --
@@ -863,6 +870,12 @@ encodeBulkOperation (BulkCreate (IndexName indexName)
                 (MappingName mappingName)
                 (DocId docId) value) = blob
     where metadata = mkBulkStreamValue "create" indexName mappingName docId
+          blob = encode metadata `mappend` "\n" `mappend` encode value
+
+encodeBulkOperation (BulkCreateAuto (IndexName indexName)
+                (MappingName mappingName)
+                value) = blob
+    where metadata = mkBulkStreamValueAuto "create" indexName mappingName
           blob = encode metadata `mappend` "\n" `mappend` encode value
 
 encodeBulkOperation (BulkDelete (IndexName indexName)

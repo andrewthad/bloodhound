@@ -695,6 +695,7 @@ data Mapping = Mapping { typeName      :: TypeName
 data BulkOperation =
     BulkIndex  IndexName MappingName DocId Value
   | BulkCreate IndexName MappingName DocId Value
+  | BulkCreateAuto IndexName MappingName Value
   | BulkDelete IndexName MappingName DocId
   | BulkUpdate IndexName MappingName DocId Value deriving (Eq, Read, Show, Generic, Typeable)
 
