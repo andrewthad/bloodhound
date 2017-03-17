@@ -878,6 +878,12 @@ encodeBulkOperation (BulkIndexAuto (IndexName indexName)
     where metadata = mkBulkStreamValueAuto "index" indexName mappingName
           blob = encode metadata `mappend` "\n" `mappend` encode value
 
+encodeBulkOperation (BulkIndexEncodingAuto (IndexName indexName)
+                (MappingName mappingName)
+                encoding) = toLazyByteString blob
+    where metadata = toEncoding (mkBulkStreamValueAuto "index" indexName mappingName)
+          blob = fromEncoding metadata <> "\n" <> fromEncoding encoding
+
 encodeBulkOperation (BulkDelete (IndexName indexName)
                 (MappingName mappingName)
                 (DocId docId)) = blob
