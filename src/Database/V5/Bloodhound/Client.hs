@@ -7,7 +7,7 @@
 -- Module : Database.Bloodhound.Client
 -- Copyright : (C) 2014 Chris Allen
 -- License : BSD-style (see the file LICENSE)
--- Maintainer : Chris Allen <cma@bitemyapp.com
+-- Maintainer : Chris Allen <cma@bitemyapp.com>
 -- Stability : provisional
 -- Portability : OverloadedStrings
 --
@@ -37,6 +37,7 @@ module Database.V5.Bloodhound.Client
        -- *** Index Aliases
        , updateIndexAliases
        , getIndexAliases
+       , deleteIndexAlias
        -- *** Index Templates
        , putTemplate
        , templateExists
@@ -710,6 +711,12 @@ getIndexAliases :: (MonadBH m, MonadThrow m)
 getIndexAliases = parseEsResponse =<< get =<< url
   where url = joinPath ["_aliases"]
 
+-- | Delete a single alias, removing it from all indices it
+--   is currently associated with.
+deleteIndexAlias :: MonadBH m => IndexAliasName -> m Reply
+deleteIndexAlias (IndexAliasName (IndexName name)) = delete =<< url
+  where url = joinPath ["_all","_alias",name]
+
 -- | 'putTemplate' creates a template given an 'IndexTemplate' and a 'TemplateName'.
 --   Explained in further detail at
 --   <https://www.elastic.co/guide/en/elasticsearch/reference/1.7/indices-templates.html>
@@ -1063,7 +1070,7 @@ scanSearch indexName mappingName search = do
 -- >>> mkSearch (Just query) Nothing
 -- Search {queryBody = Just (TermQuery (Term {termField = "user", termValue = "bitemyapp"}) Nothing), filterBody = Nothing, sortBody = Nothing, aggBody = Nothing, highlight = Nothing, trackSortScores = False, from = From 0, size = Size 10, searchType = SearchTypeQueryThenFetch, fields = Nothing, source = Nothing}
 mkSearch :: Maybe Query -> Maybe Filter -> Search
-mkSearch query filter = Search query filter Nothing Nothing Nothing False (From 0) (Size 10) SearchTypeQueryThenFetch Nothing Nothing
+mkSearch query filter = Search query filter Nothing Nothing Nothing False (From 0) (Size 10) SearchTypeQueryThenFetch Nothing Nothing Nothing
 
 -- | 'mkAggregateSearch' is a helper function that defaults everything in a 'Search' except for
 --   the 'Query' and the 'Aggregation'.
@@ -1073,7 +1080,7 @@ mkSearch query filter = Search query filter Nothing Nothing Nothing False (From 
 -- TermsAgg (TermsAggregation {term = Left "user", termInclude = Nothing, termExclude = Nothing, termOrder = Nothing, termMinDocCount = Nothing, termSize = Nothing, termShardSize = Nothing, termCollectMode = Just BreadthFirst, termExecutionHint = Nothing, termAggs = Nothing})
 -- >>> let myAggregation = mkAggregateSearch Nothing $ mkAggregations "users" terms
 mkAggregateSearch :: Maybe Query -> Aggregations -> Search
-mkAggregateSearch query mkSearchAggs = Search query Nothing Nothing (Just mkSearchAggs) Nothing False (From 0) (Size 0) SearchTypeQueryThenFetch Nothing Nothing
+mkAggregateSearch query mkSearchAggs = Search query Nothing Nothing (Just mkSearchAggs) Nothing False (From 0) (Size 0) SearchTypeQueryThenFetch Nothing Nothing Nothing
 
 -- | 'mkHighlightSearch' is a helper function that defaults everything in a 'Search' except for
 --   the 'Query' and the 'Aggregation'.
@@ -1082,7 +1089,7 @@ mkAggregateSearch query mkSearchAggs = Search query Nothing Nothing (Just mkSear
 -- >>> let testHighlight = Highlights Nothing [FieldHighlight (FieldName "message") Nothing]
 -- >>> let search = mkHighlightSearch (Just query) testHighlight
 mkHighlightSearch :: Maybe Query -> Highlights -> Search
-mkHighlightSearch query searchHighlights = Search query Nothing Nothing Nothing (Just searchHighlights) False (From 0) (Size 10) SearchTypeQueryThenFetch Nothing Nothing
+mkHighlightSearch query searchHighlights = Search query Nothing Nothing Nothing (Just searchHighlights) False (From 0) (Size 10) SearchTypeQueryThenFetch Nothing Nothing Nothing
 
 -- | 'pageSearch' is a helper function that takes a search and assigns the from
 --    and size fields for the search. The from parameter defines the offset
