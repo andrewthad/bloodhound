@@ -208,8 +208,15 @@ dispatch dMethod url body = do
   initReq <- liftIO $ parseUrl' url
   reqHook <- bhRequestHook A.<$> getBHEnv
   let reqBody = RequestBodyLBS $ fromMaybe emptyBody body
-  req <- liftIO $ reqHook $ setRequestIgnoreStatus $ initReq { method = dMethod
-                                                             , requestBody = reqBody }
+  req <- liftIO
+         $ reqHook
+         $ setRequestIgnoreStatus
+         $ initReq { method = dMethod
+                   , requestHeaders =
+                     ("Content-Type", "application/json") : requestHeaders initReq
+                   , requestBody = reqBody }
+  -- req <- liftIO $ reqHook $ setRequestIgnoreStatus $ initReq { method = dMethod
+  --                                                            , requestBody = reqBody }
   mgr <- bhManager <$> getBHEnv
   liftIO $ httpLbs req mgr
 
@@ -903,6 +910,12 @@ encodeBulkOperation (BulkUpdate (IndexName indexName)
     where metadata = mkBulkStreamValue "update" indexName mappingName docId
           doc = object ["doc" .= value]
           blob = encode metadata `mappend` "\n" `mappend` encode doc
+
+encodeBulkOperation (BulkCreateEncoding (IndexName indexName)
+                (MappingName mappingName)
+                (DocId docId) encoding) = toLazyByteString blob
+    where metadata = toEncoding (mkBulkStreamValue "create" indexName mappingName docId)
+          blob = fromEncoding metadata <> "\n" <> fromEncoding encoding
 
 -- | 'getDocument' is a straight-forward way to fetch a single document from
 --   Elasticsearch using a 'Server', 'IndexName', 'MappingName', and a 'DocId'.

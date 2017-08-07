@@ -713,6 +713,7 @@ data BulkOperation =
   | BulkCreate IndexName MappingName DocId Value
   | BulkIndexAuto IndexName MappingName Value
   | BulkIndexEncodingAuto IndexName MappingName Encoding
+  | BulkCreateEncoding IndexName MappingName DocId Encoding
   | BulkDelete IndexName MappingName DocId
   | BulkUpdate IndexName MappingName DocId Value deriving (Eq, Show, Generic, Typeable)
 
@@ -2101,7 +2102,7 @@ instance BucketAggregation DateRangeResult where
   docCount = dateRangeDocCount
   aggs = dateRangeAggs
 
-instance (FromJSON a, BucketAggregation a) => FromJSON (Bucket a) where
+instance (FromJSON a) => FromJSON (Bucket a) where
   parseJSON (Object v) = Bucket <$>
                          v .: "buckets"
   parseJSON _ = mempty
@@ -5243,9 +5244,6 @@ instance FromJSON PhraseSuggesterCollate where
     prune' <- o .:? "prune" .!= False
     return $ PhraseSuggesterCollate (TemplateQueryInline inline' params') prune'
   parseJSON x = typeMismatch "PhraseSuggesterCollate" x
-
-mkPhraseSuggesterCollate :: TemplateQueryInline -> PhraseSuggesterCollate
-mkPhraseSuggesterCollate tQuery = PhraseSuggesterCollate tQuery False
 
 data SuggestOptions =
   SuggestOptions { suggestOptionsText :: Text
