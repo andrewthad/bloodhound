@@ -219,7 +219,9 @@ dispatch dMethod url body = do
          $ initReq { method = dMethod
                    , requestHeaders =
                      -- "application/x-ndjson" for bulk
-                     ("Content-Type", "application/json") : requestHeaders initReq
+                       ("Accept-Encoding", "identity")
+                     : ("Content-Type", "application/json")
+                     : requestHeaders initReq
                    , requestBody = reqBody }
   -- req <- liftIO $ reqHook $ setRequestIgnoreStatus $ initReq { method = dMethod
   --                                                            , requestBody = reqBody }
