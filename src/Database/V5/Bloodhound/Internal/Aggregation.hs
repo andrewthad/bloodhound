@@ -446,7 +446,10 @@ parserHitsV7 obj =
 
 instance (FromJSON a) => FromJSON (SearchHits a) where
   parseJSON (Object v) = SearchHits <$>
-                         (v .: "total" >>= parserHitsV7) <*>
+                         (v .:? "total" >>= \x -> case x of
+                           Just v -> parserHitsV7 v
+                           Nothing -> pure 0
+                         ) <*>
                          v .: "max_score" <*>
                          v .: "hits"
   parseJSON _          = empty
